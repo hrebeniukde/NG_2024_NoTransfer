@@ -1,0 +1,81 @@
+QMainWindow {
+    background-color: #282828;
+}
+
+/* Default button */
+QPushButton {
+    background-color: #474747;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 7px 20px;
+    border: none;
+    border-radius: 7px;
+}
+
+QPushButton:hover {
+    background-color: #5C5C5C;
+}
+
+/* Left-side layout */
+#leftFrame {
+    background-color: #1B1B1B;
+    border-radius: 18px;
+}
+
+/* Logging box */
+#textEdit {
+    background-color: #1B1B1B;
+    color: white;
+    padding: 7px 10px;
+    border-radius: 18px;
+}
+
+/* Host edit box */
+#hostLineEdit {
+    background-color: #333333;
+    color: white;
+    padding: 7px 7px;
+    border: none;
+    border-radius: 7px;
+}
+
+/* Port spin box */
+#portSpinBox {
+    background-color: #333333;
+    color: white;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    border: none;
+    border-radius: 7px;
+}
+
+/* Download button and progress bar */
+#downloadProgressBar {
+    background-color: #333333;
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 7px;
+    height: 30px;
+}
+
+#downloadProgressBar:hover {
+    background-color: #4D4D4D;
+}
+
+#downloadProgressBar::chunk {
+    background-color: #474747;
+    border-radius: 7px;
+}
+
+#downloadProgressBar::chunk:hover {
+    background-color: #5C5C5C;
+}
+
+/* File list box */
+#filesListView {
+    background-color: #1B1B1B;
+    color: white;
+    padding: 7px 10px;
+    border-radius: 18px;
+}
