@@ -28,7 +28,7 @@ QPushButton:hover {
 }
 
 /* Logging box */
-#textEdit {
+#logMessagesEdit {
     background-color: #1B1B1B;
     color: white;
     padding: 7px 10px;
