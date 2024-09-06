@@ -5,7 +5,7 @@
 #include <QDesktopServices>
 #include <QMessageBox>
 
-#include "config.h"
+#include "logger.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -28,5 +28,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+
+    Logger *logger;
 };
 #endif // MAINWINDOW_H

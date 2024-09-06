@@ -9,12 +9,14 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    logger.cpp \
     main.cpp \
     mainwindow.cpp \
     qcustomfilesystemmodel.cpp
 
 HEADERS += \
     config.h \
+    logger.h \
     mainwindow.h \
     qcustomfilesystemmodel.h
 

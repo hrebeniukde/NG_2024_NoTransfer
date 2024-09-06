@@ -1,11 +1,17 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "config.h"
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    logger = new Logger(ui->logMessagesEdit);
+
+    logger->printLog("The application has been started. Connect to the required server.");
 }
 
 MainWindow::~MainWindow()
@@ -17,7 +23,6 @@ void MainWindow::on_gitHubButton_clicked()
 {
     QDesktopServices::openUrl(QUrl(GITHUB_REPO_URL));
 }
-
 
 void MainWindow::on_aboutButton_clicked()
 {
