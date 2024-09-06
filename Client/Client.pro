@@ -14,6 +14,7 @@ SOURCES += \
     qcustomfilesystemmodel.cpp
 
 HEADERS += \
+    config.h \
     mainwindow.h \
     qcustomfilesystemmodel.h
 

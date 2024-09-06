@@ -1,5 +1,10 @@
-QMainWindow {
+QMainWindow, QMessageBox {
     background-color: #282828;
+}
+
+/* QMessageBox Text Color */
+QMessageBox QLabel {
+    color: #ffffff;
 }
 
 /* Default button */
