@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QDesktopServices>
 #include <QMessageBox>
+#include <QTcpSocket>
 
 #include "logger.h"
 
@@ -26,8 +27,18 @@ private slots:
 
     void on_aboutButton_clicked();
 
+    void on_connectButton_clicked();
+
+    void tcpSocketConnected();
+
+    void tcpSocketDisconnected();
+
+    void tcpSocketReadyRead();
+
 private:
     Ui::MainWindow *ui;
+
+    QTcpSocket *tcpSocket;
 
     Logger *logger;
 };
