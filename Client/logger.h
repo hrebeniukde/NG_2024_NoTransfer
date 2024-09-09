@@ -6,14 +6,14 @@
 class Logger
 {
 public:
-    Logger(QTextEdit *textEdit);
+    static void initLogger(QTextEdit *textEdit);
 
-    void printLog(QString message);
+    static void printLog(QString message);
 
-    void clearLogs();
+    static void clearLogs();
 
 private:
-    QTextEdit *logTextEdit;
+    static QTextEdit *logTextEdit;
 };
 
 #endif // LOGGER_H

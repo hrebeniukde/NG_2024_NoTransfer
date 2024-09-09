@@ -2,9 +2,11 @@
 
 #include <QDateTime>
 
-Logger::Logger(QTextEdit *textEdit)
+QTextEdit *Logger::logTextEdit = nullptr;
+
+void Logger::initLogger(QTextEdit *textEdit)
 {
-    logTextEdit = textEdit;
+    Logger::logTextEdit = textEdit;
 }
 
 void Logger::printLog(QString message)
@@ -12,12 +14,12 @@ void Logger::printLog(QString message)
     QDateTime date = QDateTime::currentDateTime();
     QString formattedTime = date.toString("dd.MM.yyyy hh:mm:ss");
 
-    logTextEdit->append(
+    Logger::logTextEdit->append(
         QString("<strong>[%1]</strong> %2").arg(formattedTime, message)
     );
 }
 
 void Logger::clearLogs()
 {
-    logTextEdit->clear();
+    Logger::logTextEdit->clear();
 }
