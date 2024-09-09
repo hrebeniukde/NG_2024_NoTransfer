@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 
 #include "config.h"
+#include "logger.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -9,23 +10,17 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    tcpSocket = new QTcpSocket();
-    logger = new Logger(ui->logMessagesEdit);
+    network = new Network();
 
-    connect(tcpSocket, &QTcpSocket::connected, this, &MainWindow::tcpSocketConnected);
-    connect(tcpSocket, &QTcpSocket::disconnected, this, &MainWindow::tcpSocketDisconnected);
-    connect(tcpSocket, &QTcpSocket::readyRead, this, &MainWindow::tcpSocketReadyRead);
+    Logger::initLogger(ui->logMessagesEdit);
 
-    logger->printLog("The application has been started. To get started, you are required to connect to the server.");
+    Logger::printLog("The application has been started. To get started, you are required to connect to the server.");
 }
 
 MainWindow::~MainWindow()
 {
-    tcpSocket->close();
-
     delete ui;
-    delete tcpSocket;
-    delete logger;
+    delete network;
 }
 
 void MainWindow::on_gitHubButton_clicked()
@@ -52,10 +47,10 @@ void MainWindow::on_aboutButton_clicked()
 
 void MainWindow::on_connectButton_clicked()
 {
-    QString serverHost = ui->hostLineEdit->text();
+    QHostAddress serverHost = QHostAddress(ui->hostLineEdit->text());
     int serverPort = ui->portSpinBox->value();
 
-    if (serverHost.isEmpty() || !serverPort) {
+    if (serverHost.isNull() || !serverPort) {
         QMessageBox msgBox;
         msgBox.setIcon(QMessageBox::Warning);
         msgBox.setText("You did not specify a server host or port to connect to!");
@@ -63,8 +58,7 @@ void MainWindow::on_connectButton_clicked()
         return;
     }
 
-    if (tcpSocket->peerAddress().toString() == serverHost &&
-        tcpSocket->peerPort() == serverPort) {
+    if (network->isAlreadyConnected(serverHost, serverPort)) {
         QMessageBox msgBox;
         msgBox.setIcon(QMessageBox::Warning);
         msgBox.setText("You are already connected to this server!");
@@ -72,24 +66,6 @@ void MainWindow::on_connectButton_clicked()
         return;
     }
 
-    tcpSocket->connectToHost(QHostAddress(serverHost), serverPort);
-}
-
-void MainWindow::tcpSocketConnected()
-{
-    QString serverHost = tcpSocket->peerAddress().toString();
-    QString serverPort = QString::number(tcpSocket->peerPort());
-
-    logger->printLog(QString("Connected to the server (%1:%2).").arg(serverHost, serverPort));
-}
-
-void MainWindow::tcpSocketDisconnected()
-{
-    logger->printLog("Disconnected from the server.");
-}
-
-void MainWindow::tcpSocketReadyRead()
-{
-    // TODO: Implement communication between server and client
+    network->connectToServer(serverHost, serverPort);
 }
 

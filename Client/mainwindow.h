@@ -6,7 +6,7 @@
 #include <QMessageBox>
 #include <QTcpSocket>
 
-#include "logger.h"
+#include "network.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -29,17 +29,9 @@ private slots:
 
     void on_connectButton_clicked();
 
-    void tcpSocketConnected();
-
-    void tcpSocketDisconnected();
-
-    void tcpSocketReadyRead();
-
 private:
     Ui::MainWindow *ui;
 
-    QTcpSocket *tcpSocket;
-
-    Logger *logger;
+    Network *network;
 };
 #endif // MAINWINDOW_H
