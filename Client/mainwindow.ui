@@ -47,6 +47,9 @@
        </property>
        <item>
         <widget class="QLineEdit" name="hostLineEdit">
+         <property name="text">
+          <string>127.0.0.1</string>
+         </property>
          <property name="placeholderText">
           <string>127.0.0.1</string>
          </property>
@@ -151,7 +154,31 @@
        <number>10</number>
       </property>
       <item>
-       <widget class="QListView" name="filesListView"/>
+       <widget class="QTreeWidget" name="filesTreeWidget">
+        <property name="columnCount">
+         <number>4</number>
+        </property>
+        <column>
+         <property name="text">
+          <string notr="true">1</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string notr="true">2</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string notr="true">3</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string notr="true">4</string>
+         </property>
+        </column>
+       </widget>
       </item>
       <item>
        <widget class="QTextEdit" name="logMessagesEdit">
