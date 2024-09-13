@@ -5,7 +5,7 @@
 
 void loadApplicationStyleSheet(QApplication *application)
 {
-    QFile styleSheetFile(":/stylesheet.css");
+    QFile styleSheetFile(":/assets/stylesheet.css");
 
     if (styleSheetFile.open(QFile::ReadOnly)) {
         application->setStyleSheet(styleSheetFile.readAll());
