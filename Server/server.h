@@ -6,8 +6,11 @@
 #include <QTcpSocket>
 #include <QVector>
 #include <QFile>
+#include <QDir>
 
 #define DEBUG qDebug().noquote().nospace()
+
+#define SHARED_FOLDER_PATH "Shared" // do not place '/' in the end of the path
 
 struct ClientData
 {
@@ -34,6 +37,10 @@ private:
     QTcpServer *tcpServer;
 
     QVector<ClientData> clients;
+
+    void handleIncomingRpc(ClientData client, int rpcId);
+
+    void sendFilesList(ClientData client, QString directoryPath = "");
 };
 
 #endif // SERVER_H

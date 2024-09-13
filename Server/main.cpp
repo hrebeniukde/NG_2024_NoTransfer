@@ -3,7 +3,7 @@
 #include "server.h"
 
 #define SERVER_HOST "0.0.0.0"
-#define SERVER_PORT 8080
+#define SERVER_PORT 2024
 
 int main(int argc, char *argv[])
 {

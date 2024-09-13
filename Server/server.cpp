@@ -1,4 +1,5 @@
 #include "server.h"
+#include "rpc.h"
 
 Server::Server(QObject *parent)
     : QObject{parent}
@@ -54,6 +55,8 @@ void Server::clientConnected()
     client.incomeDataStream->setVersion(QDataStream::Qt_6_7);
     clients.append(client);
 
+    sendFilesList(client);
+
     DEBUG << "Current connected clients: " << clients.size();
 }
 
@@ -68,6 +71,7 @@ void Server::clientDisconnected()
 
         DEBUG << "Client " << client.tcpSocket->peerAddress().toString() << ":" << tcpSocket->peerPort() << " has been disconnected!";
 
+        client.tcpSocket->close();
         delete client.tcpSocket;
         delete client.incomeDataStream;
 
@@ -88,19 +92,53 @@ void Server::incomingDataFromClient()
 
         client.incomeDataStream->startTransaction();
 
-        QString fileName;
-        QByteArray fileData;
-        *client.incomeDataStream >> fileName;
-        *client.incomeDataStream >> fileData;
+        int rpcId;
+        *client.incomeDataStream >> rpcId;
+        handleIncomingRpc(client, rpcId);
+        break;
+    }
+}
+
+void Server::handleIncomingRpc(ClientData client, int rpcId)
+{
+    switch (rpcId) {
+    case RPC_CHANGE_DIRECTORY: {
+        QString newDirectoryPath;
+
+        *client.incomeDataStream >> newDirectoryPath;
 
         if (!client.incomeDataStream->commitTransaction())
             return;
 
-        QFile file(fileName);
-        file.open(QIODevice::WriteOnly);
-        file.write(fileData);
-        file.close();
-
-        DEBUG << "Client " << client.tcpSocket->peerAddress().toString() << ":" << tcpSocket->peerPort() << " has sent " << fileName << "...";
+        sendFilesList(client, newDirectoryPath);
+        break;
     }
+    default:
+        break;
+    }
+}
+
+void Server::sendFilesList(ClientData client, QString directoryPath)
+{
+    if (directoryPath.isEmpty())
+        directoryPath = SHARED_FOLDER_PATH;
+
+    QDir directory(directoryPath);
+    QFileInfoList entryInfoList = directory.entryInfoList(QDir::NoDotAndDotDot | QDir::AllEntries, QDir::DirsFirst);
+
+    QByteArray sendDataBlock;
+    QDataStream sendDataStream(&sendDataBlock, QIODeviceBase::WriteOnly);
+    sendDataStream.setVersion(QDataStream::Qt_6_8);
+
+    sendDataStream << (int)RPC_SEND_FILES_LIST;
+    sendDataStream << directoryPath;
+
+    for (const auto& entry : entryInfoList) {
+        sendDataStream << entry.fileName();
+        sendDataStream << entry.isDir();
+        sendDataStream << (uint64_t) entry.size();
+        sendDataStream << entry.lastModified();
+    }
+
+    client.tcpSocket->write(sendDataBlock);
 }
