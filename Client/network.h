@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QTcpSocket>
 
+#include "filestreewidget.h"
+
 class Network : public QObject
 {
     Q_OBJECT
@@ -15,6 +17,8 @@ public:
 
     bool isAlreadyConnected(QHostAddress host, int port);
 
+    void changeDirectory(QString directoryName);
+
 private slots:
     void tcpSocketConnected();
 
@@ -23,9 +27,14 @@ private slots:
     void tcpSocketReadyRead();
 
 signals:
+    void updateFilesList(QVector<ServerFile> filesList, QString directoryPath);
 
 private:
     QTcpSocket *tcpSocket;
+
+    QDataStream incomeDataStream;
+
+    void handleIncomingRpc(int rpcId);
 };
 
 #endif // NETWORK_H

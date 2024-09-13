@@ -7,6 +7,7 @@
 #include <QTcpSocket>
 
 #include "network.h"
+#include "filestreewidget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -29,9 +30,17 @@ private slots:
 
     void on_connectButton_clicked();
 
+    void updateFilesList(QVector<ServerFile> filesList, QString directoryPath);
+
+    void openDirectoryRequest(QString directoryName);
+
 private:
     Ui::MainWindow *ui;
 
+    FilesTreeWidget *filesTreeWidget;
+
     Network *network;
+
+    QString currentDirectoryPath;
 };
 #endif // MAINWINDOW_H

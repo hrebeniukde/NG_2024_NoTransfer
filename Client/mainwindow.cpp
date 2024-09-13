@@ -10,9 +10,15 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    Logger::initLogger(ui->logMessagesEdit);
+
+    filesTreeWidget = new FilesTreeWidget();
+    filesTreeWidget->setTreeWidget(ui->filesTreeWidget);
+
     network = new Network();
 
-    Logger::initLogger(ui->logMessagesEdit);
+    connect (network, &Network::updateFilesList, this, &MainWindow::updateFilesList);
+    connect (filesTreeWidget, &FilesTreeWidget::openDirectoryRequest, this, &MainWindow::openDirectoryRequest);
 
     Logger::printLog("The application has been started. To get started, you are required to connect to the server.");
 }
@@ -67,5 +73,29 @@ void MainWindow::on_connectButton_clicked()
     }
 
     network->connectToServer(serverHost, serverPort);
+}
+
+void MainWindow::updateFilesList(QVector<ServerFile> filesList, QString directoryPath)
+{
+    currentDirectoryPath = directoryPath;
+
+    filesTreeWidget->clearTree();
+
+    for (int index = 0; index < filesList.size(); index++) {
+        filesTreeWidget->addFileToTree(filesList.at(index));
+    }
+}
+
+void MainWindow::openDirectoryRequest(QString directoryName)
+{
+    QString newDirectoryPath;
+
+    if (directoryName == "..") {
+        newDirectoryPath = currentDirectoryPath.left(currentDirectoryPath.lastIndexOf('/'));
+    } else {
+        newDirectoryPath = currentDirectoryPath + "/" + directoryName;
+    }
+
+    network->changeDirectory(newDirectoryPath);
 }
 
