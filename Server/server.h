@@ -41,6 +41,10 @@ private:
     void handleIncomingRpc(ClientData client, int rpcId);
 
     void sendFilesList(ClientData client, QString directoryPath = "");
+
+    void sendFile(ClientData client, QString filePath, bool tempFile);
+
+    QString getClientFormattedAddress(QTcpSocket *client);
 };
 
 #endif // SERVER_H

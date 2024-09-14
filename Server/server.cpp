@@ -14,7 +14,7 @@ Server::~Server()
     for (int clientIndex = 0; clientIndex < clients.size(); clientIndex++) {
         auto &client = clients[clientIndex];
 
-        DEBUG << "Closing the connection to " << client.tcpSocket->peerAddress().toString() << "...";
+        DEBUG << "Closing the connection to " << getClientFormattedAddress(client.tcpSocket);
         client.tcpSocket->close();
 
         delete client.tcpSocket;
@@ -24,7 +24,7 @@ Server::~Server()
     }
 
     if (tcpServer->isListening()) {
-        DEBUG << "Closing server...";
+        DEBUG << "Closing server";
         tcpServer->close();
     }
 
@@ -34,7 +34,7 @@ Server::~Server()
 void Server::start(QString host, int port)
 {
     if (tcpServer->listen(QHostAddress(host), port)) {
-        DEBUG << "The server has been started, its address is " << host << ":" << port << "...";
+        DEBUG << "The server has been started, its address is " << host << ":" << port;
     } else {
         DEBUG << "There was an error when starting the server: " << tcpServer->errorString();
     }
@@ -43,7 +43,7 @@ void Server::start(QString host, int port)
 void Server::clientConnected()
 {
     QTcpSocket *tcpSocket = tcpServer->nextPendingConnection();
-    DEBUG << "New connection: " << tcpSocket->peerAddress().toString() << ":" << tcpSocket->peerPort() << "...";
+    DEBUG << "New connection: " << getClientFormattedAddress(tcpSocket);
 
     connect (tcpSocket, &QTcpSocket::disconnected, this, &Server::clientDisconnected);
     connect (tcpSocket, &QTcpSocket::readyRead, this, &Server::incomingDataFromClient);
@@ -69,7 +69,7 @@ void Server::clientDisconnected()
         if (client.tcpSocket != tcpSocket)
             continue;
 
-        DEBUG << "Client " << client.tcpSocket->peerAddress().toString() << ":" << tcpSocket->peerPort() << " has been disconnected!";
+        DEBUG << "Client " << getClientFormattedAddress(client.tcpSocket) << " has been disconnected!";
 
         client.tcpSocket->close();
         delete client.tcpSocket;
@@ -101,6 +101,8 @@ void Server::incomingDataFromClient()
 
 void Server::handleIncomingRpc(ClientData client, int rpcId)
 {
+    DEBUG << "New incoming RPC (" << rpcId << ") from " << getClientFormattedAddress(client.tcpSocket);
+
     switch (rpcId) {
     case RPC_CHANGE_DIRECTORY: {
         QString newDirectoryPath;
@@ -111,6 +113,22 @@ void Server::handleIncomingRpc(ClientData client, int rpcId)
             return;
 
         sendFilesList(client, newDirectoryPath);
+        break;
+    }
+    case RPC_DOWNLOAD_FILE: {
+        QString filePath;
+        bool tempFile;
+
+        *client.incomeDataStream >> filePath;
+        *client.incomeDataStream >> tempFile;
+
+        if (!client.incomeDataStream->commitTransaction())
+            return;
+
+        DEBUG << "New download request from " << getClientFormattedAddress(client.tcpSocket);
+        DEBUG << "Requested file: \"" << filePath << "\"";
+
+        sendFile(client, filePath, tempFile);
         break;
     }
     default:
@@ -141,4 +159,31 @@ void Server::sendFilesList(ClientData client, QString directoryPath)
     }
 
     client.tcpSocket->write(sendDataBlock);
+}
+
+void Server::sendFile(ClientData client, QString filePath, bool tempFile)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly))
+        return;
+
+    QByteArray sendDataBlock;
+    QDataStream sendDataStream(&sendDataBlock, QIODeviceBase::WriteOnly);
+    sendDataStream.setVersion(QDataStream::Qt_6_8);
+
+    sendDataStream << (int)RPC_SEND_FILE;
+    sendDataStream << tempFile;
+
+    QByteArray fileContent = file.readAll();
+    sendDataStream << fileContent.size();
+    sendDataStream << fileContent;
+
+    client.tcpSocket->write(sendDataBlock);
+
+    DEBUG << "File \"" << filePath << "\" has been sent to " << getClientFormattedAddress(client.tcpSocket);
+}
+
+QString Server::getClientFormattedAddress(QTcpSocket *client)
+{
+    return client->peerAddress().toString() + ":" + QString::number(client->peerPort());
 }
