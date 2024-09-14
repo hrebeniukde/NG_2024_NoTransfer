@@ -5,6 +5,7 @@
 #include <QDesktopServices>
 #include <QMessageBox>
 #include <QTcpSocket>
+#include <QFileDialog>
 
 #include "network.h"
 #include "filestreewidget.h"
@@ -30,9 +31,15 @@ private slots:
 
     void on_connectButton_clicked();
 
+    void on_downloadProgressBar_clicked();
+
     void updateFilesList(QVector<ServerFile> filesList, QString directoryPath);
 
     void openDirectoryRequest(QString directoryName);
+
+    void openFileRequest(QString fileName);
+
+    void downloadFileProgress(int progress);
 
 private:
     Ui::MainWindow *ui;
@@ -42,5 +49,7 @@ private:
     Network *network;
 
     QString currentDirectoryPath;
+
+    void enableInterfaceInteraction(bool state);
 };
 #endif // MAINWINDOW_H

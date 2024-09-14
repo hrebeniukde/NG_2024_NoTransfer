@@ -92,7 +92,7 @@
         </spacer>
        </item>
        <item>
-        <widget class="QProgressBar" name="downloadProgressBar">
+        <widget class="ClickableProgressBar" name="downloadProgressBar">
          <property name="value">
           <number>100</number>
          </property>
@@ -213,6 +213,13 @@ li.checked::marker { content: &quot;\2612&quot;; }
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ClickableProgressBar</class>
+   <extends>QProgressBar</extends>
+   <header>clickableprogressbar.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

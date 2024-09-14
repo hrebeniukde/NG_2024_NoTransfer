@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QTcpSocket>
+#include <QDir>
+#include <QDesktopServices>
 
 #include "filestreewidget.h"
 
@@ -19,6 +21,8 @@ public:
 
     void changeDirectory(QString directoryName);
 
+    void downloadFile(QString filePath, bool tempFile = true, QString savePath = "");
+
 private slots:
     void tcpSocketConnected();
 
@@ -29,10 +33,15 @@ private slots:
 signals:
     void updateFilesList(QVector<ServerFile> filesList, QString directoryPath);
 
+    void downloadFileProgress(int progress);
+
 private:
     QTcpSocket *tcpSocket;
 
     QDataStream incomeDataStream;
+
+    QString currentDownloadingFile;
+    QString currentDownloadingFileSavePath;
 
     void handleIncomingRpc(int rpcId);
 };

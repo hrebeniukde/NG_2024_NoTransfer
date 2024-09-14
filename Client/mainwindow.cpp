@@ -17,8 +17,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     network = new Network();
 
-    connect (network, &Network::updateFilesList, this, &MainWindow::updateFilesList);
-    connect (filesTreeWidget, &FilesTreeWidget::openDirectoryRequest, this, &MainWindow::openDirectoryRequest);
+    connect(network, &Network::updateFilesList, this, &MainWindow::updateFilesList);
+    connect(network, &Network::downloadFileProgress, this, &MainWindow::downloadFileProgress);
+    connect(filesTreeWidget, &FilesTreeWidget::openDirectoryRequest, this, &MainWindow::openDirectoryRequest);
+    connect(filesTreeWidget, &FilesTreeWidget::openFileRequest, this, &MainWindow::openFileRequest);
 
     Logger::printLog("The application has been started. To get started, you are required to connect to the server.");
 }
@@ -45,8 +47,8 @@ void MainWindow::on_aboutButton_clicked()
             "<strong>Social Media:</strong><br/>"
             "- <a href=\"%3\">GitHub</a><br/><br/>"
             "Copyright © 2024 <a href=\"%4\">%5</a>"
-        ).arg(APP_NAME, APP_VERSION, GITHUB_REPO_URL, AUTHOR_GITHUB_URL, AUTHOR_NAME)
-    );
+            ).arg(APP_NAME, APP_VERSION, GITHUB_REPO_URL, AUTHOR_GITHUB_URL, AUTHOR_NAME)
+        );
     msgBox.exec();
 }
 
@@ -75,6 +77,24 @@ void MainWindow::on_connectButton_clicked()
     network->connectToServer(serverHost, serverPort);
 }
 
+void MainWindow::on_downloadProgressBar_clicked()
+{
+    QString fileName = filesTreeWidget->getSelectedFile();
+    if (fileName.isEmpty()) {
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setText("The file is not selected or you have selected a folder. Try again.");
+        msgBox.exec();
+        return;
+    }
+
+    QString saveDirectory = QFileDialog::getExistingDirectory(this, "Select folder to save file", "", QFileDialog::ShowDirsOnly);
+    if (saveDirectory.isEmpty())
+        return;
+
+    network->downloadFile(currentDirectoryPath + "/" + fileName, false, saveDirectory);
+}
+
 void MainWindow::updateFilesList(QVector<ServerFile> filesList, QString directoryPath)
 {
     currentDirectoryPath = directoryPath;
@@ -97,5 +117,37 @@ void MainWindow::openDirectoryRequest(QString directoryName)
     }
 
     network->changeDirectory(newDirectoryPath);
+}
+
+void MainWindow::openFileRequest(QString fileName)
+{
+    network->downloadFile(currentDirectoryPath + "/" + fileName);
+}
+
+void MainWindow::downloadFileProgress(int progress)
+{
+    if (progress >= 99 || progress < 0) {
+        enableInterfaceInteraction(true);
+
+        ui->downloadProgressBar->setValue(100);
+        ui->downloadProgressBar->setFormat("Download file");
+        return;
+    }
+
+    enableInterfaceInteraction(false);
+
+    ui->downloadProgressBar->setValue(progress);
+    ui->downloadProgressBar->setFormat("%p%");
+}
+
+void MainWindow::enableInterfaceInteraction(bool state)
+{
+    ui->connectButton->setEnabled(state);
+
+    ui->downloadProgressBar->setEnabled(state);
+    ui->uploadButton->setEnabled(state);
+    ui->deleteButton->setEnabled(state);
+
+    ui->filesTreeWidget->setEnabled(state);
 }
 

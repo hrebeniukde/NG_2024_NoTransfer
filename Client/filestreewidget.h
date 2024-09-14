@@ -26,11 +26,15 @@ public:
 
     void addFileToTree(ServerFile file);
 
+    QString getSelectedFile();
+
 private slots:
     void itemDoubleClicked(QTreeWidgetItem *item);
 
 signals:
     void openDirectoryRequest(QString directoryName);
+
+    void openFileRequest(QString fileName);
 
 private:
     QTreeWidget *treeWidget;
