@@ -1,5 +1,7 @@
 #include "server.h"
+
 #include "rpc.h"
+#include "util.h"
 
 Server::Server(QObject *parent)
     : QObject{parent}
@@ -56,8 +58,6 @@ void Server::clientConnected()
     clients.append(client);
 
     sendFilesList(client);
-
-    DEBUG << "Current connected clients: " << clients.size();
 }
 
 void Server::clientDisconnected()
@@ -69,7 +69,7 @@ void Server::clientDisconnected()
         if (client.tcpSocket != tcpSocket)
             continue;
 
-        DEBUG << "Client " << getClientFormattedAddress(client.tcpSocket) << " has been disconnected!";
+        DEBUG << "Client " << getClientFormattedAddress(client.tcpSocket) << " has been disconnected";
 
         client.tcpSocket->close();
         delete client.tcpSocket;
@@ -78,8 +78,6 @@ void Server::clientDisconnected()
         clients.removeAt(clientIndex);
         break;
     }
-
-    DEBUG << "Current connected clients: " << clients.size();
 }
 
 void Server::incomingDataFromClient()
@@ -101,8 +99,6 @@ void Server::incomingDataFromClient()
 
 void Server::handleIncomingRpc(ClientData client, int rpcId)
 {
-    DEBUG << "New incoming RPC (" << rpcId << ") from " << getClientFormattedAddress(client.tcpSocket);
-
     switch (rpcId) {
     case RPC_CHANGE_DIRECTORY: {
         QString newDirectoryPath;
@@ -117,10 +113,10 @@ void Server::handleIncomingRpc(ClientData client, int rpcId)
     }
     case RPC_DOWNLOAD_FILE: {
         QString filePath;
-        bool tempFile;
+        bool isTempFile;
 
         *client.incomeDataStream >> filePath;
-        *client.incomeDataStream >> tempFile;
+        *client.incomeDataStream >> isTempFile;
 
         if (!client.incomeDataStream->commitTransaction())
             return;
@@ -128,7 +124,52 @@ void Server::handleIncomingRpc(ClientData client, int rpcId)
         DEBUG << "New download request from " << getClientFormattedAddress(client.tcpSocket);
         DEBUG << "Requested file: \"" << filePath << "\"";
 
-        sendFile(client, filePath, tempFile);
+        sendFile(client, filePath, isTempFile);
+        break;
+    }
+    case RPC_UPLOAD_FILE: {
+        QString filePath;
+        QByteArray fileContent;
+
+        *client.incomeDataStream >> filePath;
+        *client.incomeDataStream >> fileContent;
+
+        if (!client.incomeDataStream->commitTransaction())
+            return;
+
+        QFile file(filePath);
+        file.open(QIODevice::WriteOnly);
+        file.write(fileContent);
+        file.close();
+
+        sendUploadFinished(client);
+        break;
+    }
+    case RPC_DELETE_FILE: {
+        QString itemPath;
+        bool isFolder;
+
+        *client.incomeDataStream >> itemPath;
+        *client.incomeDataStream >> isFolder;
+
+        if (!client.incomeDataStream->commitTransaction())
+            return;
+
+        if (isFolder) {
+            QDir directory(itemPath);
+            if (!directory.exists())
+                return;
+
+            directory.removeRecursively();
+        } else {
+            QFile file(itemPath);
+            if (!file.exists())
+                return;
+
+            file.remove();
+        }
+
+        sendFilesList(client, Util::getItemParentDirectory(itemPath));
         break;
     }
     default:
@@ -161,7 +202,7 @@ void Server::sendFilesList(ClientData client, QString directoryPath)
     client.tcpSocket->write(sendDataBlock);
 }
 
-void Server::sendFile(ClientData client, QString filePath, bool tempFile)
+void Server::sendFile(ClientData client, QString filePath, bool isTempFile)
 {
     QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly))
@@ -172,15 +213,28 @@ void Server::sendFile(ClientData client, QString filePath, bool tempFile)
     sendDataStream.setVersion(QDataStream::Qt_6_8);
 
     sendDataStream << (int)RPC_SEND_FILE;
-    sendDataStream << tempFile;
+    sendDataStream << isTempFile;
 
     QByteArray fileContent = file.readAll();
     sendDataStream << fileContent.size();
     sendDataStream << fileContent;
 
+    file.close();
+
     client.tcpSocket->write(sendDataBlock);
 
     DEBUG << "File \"" << filePath << "\" has been sent to " << getClientFormattedAddress(client.tcpSocket);
+}
+
+void Server::sendUploadFinished(ClientData client)
+{
+    QByteArray sendDataBlock;
+    QDataStream sendDataStream(&sendDataBlock, QIODeviceBase::WriteOnly);
+    sendDataStream.setVersion(QDataStream::Qt_6_8);
+
+    sendDataStream << (int)RPC_UPLOAD_FILE_FINISHED;
+
+    client.tcpSocket->write(sendDataBlock);
 }
 
 QString Server::getClientFormattedAddress(QTcpSocket *client)

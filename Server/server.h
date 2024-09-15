@@ -42,7 +42,9 @@ private:
 
     void sendFilesList(ClientData client, QString directoryPath = "");
 
-    void sendFile(ClientData client, QString filePath, bool tempFile);
+    void sendFile(ClientData client, QString filePath, bool isTempFile);
+
+    void sendUploadFinished(ClientData client);
 
     QString getClientFormattedAddress(QTcpSocket *client);
 };
