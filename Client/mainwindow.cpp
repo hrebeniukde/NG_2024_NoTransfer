@@ -18,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     network = new Network();
 
+    connect(network, &Network::connectStateChanged, this, &MainWindow::connectStateChanged);
     connect(network, &Network::updateFilesList, this, &MainWindow::updateFilesList);
     connect(network, &Network::downloadFileProgress, this, &MainWindow::downloadFileProgress);
     connect(network, &Network::uploadFinished, this, &MainWindow::uploadFinished);
@@ -182,6 +183,19 @@ void MainWindow::uploadFinished()
 {
     enableInterfaceInteraction(true);
     network->changeDirectory(Util::currentDirectoryPath);
+}
+
+void MainWindow::connectStateChanged(bool connectionState)
+{
+    QString windowTitle;
+
+    if (connectionState) {
+        windowTitle = QString("%1 - %2").arg(network->getServerAddress(), APP_NAME);
+    } else {
+        windowTitle = QString("No connection - %1").arg(APP_NAME);
+    }
+
+    setWindowTitle(windowTitle);
 }
 
 void MainWindow::enableInterfaceInteraction(bool state)

@@ -47,6 +47,8 @@ private slots:
 
     void uploadFinished();
 
+    void connectStateChanged(bool connectionState);
+
 private:
     Ui::MainWindow *ui;
 

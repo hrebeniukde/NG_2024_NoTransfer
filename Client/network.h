@@ -21,6 +21,8 @@ public:
 
     bool isConnectedToServer();
 
+    QString getServerAddress();
+
     void changeDirectory(QString directoryName);
 
     void downloadFile(QString filePath, bool isTempFile = true, QString savePath = "");
@@ -42,6 +44,8 @@ signals:
     void downloadFileProgress(int progress);
 
     void uploadFinished();
+
+    void connectStateChanged(bool connectionState);
 
 private:
     QTcpSocket *tcpSocket;

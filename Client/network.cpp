@@ -44,6 +44,11 @@ bool Network::isConnectedToServer()
     return tcpSocket->state() == QAbstractSocket::ConnectedState;
 }
 
+QString Network::getServerAddress()
+{
+    return QString("%1:%2").arg(tcpSocket->peerAddress().toString(), QString::number(tcpSocket->peerPort()));
+}
+
 void Network::changeDirectory(QString newDirectoryPath)
 {
     QByteArray sendDataBlock;
@@ -119,11 +124,13 @@ void Network::tcpSocketConnected()
     QString serverHost = tcpSocket->peerAddress().toString();
     QString serverPort = QString::number(tcpSocket->peerPort());
 
+    emit connectStateChanged(true);
     Logger::printLog(QString("Connected to the server (%1:%2).").arg(serverHost, serverPort));
 }
 
 void Network::tcpSocketDisconnected()
 {
+    emit connectStateChanged(false);
     Logger::printLog("Disconnected from the server.");
 }
 
