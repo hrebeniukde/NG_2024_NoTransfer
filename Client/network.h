@@ -27,7 +27,11 @@ public:
 
     void downloadFile(QString filePath, bool isTempFile = true, QString savePath = "");
 
-    void uploadFile(QString filePath, QString savePath);
+    void uploadFile(QString filePath);
+
+    void createItem(QString itemName);
+
+    void renameItem(QString itemPath, QString newItemName);
 
     void deleteItem(QString itemPath, bool isFolder);
 

@@ -46,7 +46,7 @@ void MainWindow::on_aboutButton_clicked()
     msgBox.setText(
         QString(
             "<center><strong>%1 (%2)</strong></center><br/>"
-            "Client application for working with server files with the ability to upload, delete and download them.<br/><br/>"
+            "Client application for working with server files with the ability to download, upload, create, rename and delete them.<br/><br/>"
             "<strong>Social Media:</strong><br/>"
             "- <a href=\"%3\">GitHub</a><br/><br/>"
             "Copyright © 2024 <a href=\"%4\">%5</a>"
@@ -62,18 +62,12 @@ void MainWindow::on_connectButton_clicked()
     int serverPort = ui->portSpinBox->value();
 
     if (serverHost.isNull() || !serverPort) {
-        QMessageBox msgBox;
-        msgBox.setIcon(QMessageBox::Warning);
-        msgBox.setText("You did not specify a server host or port to connect to!");
-        msgBox.exec();
+        Util::sendWarningAlert("You did not specify a server host or port to connect to!");
         return;
     }
 
     if (network->isAlreadyConnected(serverHost, serverPort)) {
-        QMessageBox msgBox;
-        msgBox.setIcon(QMessageBox::Warning);
-        msgBox.setText("You are already connected to this server!");
-        msgBox.exec();
+        Util::sendWarningAlert("You are already connected to this server!");
         return;
     }
 
@@ -114,7 +108,39 @@ void MainWindow::on_uploadButton_clicked()
 
     enableInterfaceInteraction(false);
 
-    network->uploadFile(filePath, Util::currentDirectoryPath);
+    network->uploadFile(filePath);
+}
+
+void MainWindow::on_createButton_clicked()
+{
+    if (!Util::isConnectedToServer(network))
+        return;
+
+    bool dialogResult;
+    QString itemName = QInputDialog::getText(this, APP_NAME, "Enter the desired file or folder name:", QLineEdit::Normal, "", &dialogResult);
+    if (!dialogResult || itemName.isEmpty())
+        return;
+
+    network->createItem(itemName);
+}
+
+void MainWindow::on_renameButton_clicked()
+{
+    if (!Util::isConnectedToServer(network))
+        return;
+
+    QPair<QString, bool> item = filesTreeWidget->getSelectedItem();
+    if (item.first.isEmpty()) {
+        Util::sendWarningAlert("You have not selected a folder or file to rename.");
+        return;
+    }
+
+    bool dialogResult;
+    QString newItemName = QInputDialog::getText(this, APP_NAME, "Enter the desired new name:", QLineEdit::Normal, "", &dialogResult);
+    if (!dialogResult || newItemName.isEmpty())
+        return;
+
+    network->renameItem(Util::getItemFullPath(item.first), newItemName);
 }
 
 void MainWindow::on_deleteButton_clicked()
@@ -124,10 +150,7 @@ void MainWindow::on_deleteButton_clicked()
 
     QPair<QString, bool> item = filesTreeWidget->getSelectedItem();
     if (item.first.isEmpty()) {
-        QMessageBox msgBox;
-        msgBox.setIcon(QMessageBox::Warning);
-        msgBox.setText("You have not selected a folder or file to delete.");
-        msgBox.exec();
+        Util::sendWarningAlert("You have not selected a folder or file to delete.");
         return;
     }
 
@@ -204,6 +227,9 @@ void MainWindow::enableInterfaceInteraction(bool state)
 
     ui->downloadProgressBar->setEnabled(state);
     ui->uploadButton->setEnabled(state);
+
+    ui->createButton->setEnabled(state);
+    ui->renameButton->setEnabled(state);
     ui->deleteButton->setEnabled(state);
 
     ui->filesTreeWidget->setEnabled(state);

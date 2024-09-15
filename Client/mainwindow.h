@@ -6,6 +6,7 @@
 #include <QMessageBox>
 #include <QTcpSocket>
 #include <QFileDialog>
+#include <QInputDialog>
 
 #include "network.h"
 #include "filestreewidget.h"
@@ -34,6 +35,10 @@ private slots:
     void on_downloadProgressBar_clicked();
 
     void on_uploadButton_clicked();
+
+    void on_createButton_clicked();
+
+    void on_renameButton_clicked();
 
     void on_deleteButton_clicked();
 

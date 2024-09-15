@@ -1,10 +1,23 @@
-QMainWindow, QMessageBox {
+QMainWindow, QMessageBox, QInputDialog {
     background-color: #282828;
 }
 
 /* QMessageBox Text Color */
 QMessageBox QLabel {
     color: #ffffff;
+}
+
+/* QInputDialog */
+QInputDialog QLabel {
+    color: #ffffff;
+}
+
+QInputDialog QLineEdit {
+    background-color: #333333;
+    color: white;
+    padding: 7px 7px;
+    border: none;
+    border-radius: 7px;
 }
 
 /* Default button */

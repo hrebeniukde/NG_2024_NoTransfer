@@ -9,6 +9,8 @@ enum {
     RPC_UPLOAD_FILE,
     RPC_UPLOAD_FILE_FINISHED,
     RPC_DELETE_FILE,
+    RPC_CREATE_FILE,
+    RPC_RENAME_FILE,
 };
 
 #endif // RPC_H

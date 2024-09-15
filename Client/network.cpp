@@ -82,7 +82,7 @@ void Network::downloadFile(QString filePath, bool isTempFile, QString savePath)
     Logger::printLog("<b><i>WARNING!</i></b> The application interface is temporarily disabled while downloading files.");
 }
 
-void Network::uploadFile(QString filePath, QString savePath)
+void Network::uploadFile(QString filePath)
 {
     currentUploadingFile = Util::getItemNameFromPath(filePath);
 
@@ -95,7 +95,7 @@ void Network::uploadFile(QString filePath, QString savePath)
         return;
 
     sendDataStream << (int)RPC_UPLOAD_FILE;
-    sendDataStream << savePath + "/" + currentUploadingFile;
+    sendDataStream << Util::getItemFullPath(currentUploadingFile);
     sendDataStream << file.readAll();
 
     file.close();
@@ -104,6 +104,35 @@ void Network::uploadFile(QString filePath, QString savePath)
 
     Logger::printLog(QString("File \"%1\" upload has started.").arg(currentUploadingFile));
     Logger::printLog("<b><i>WARNING!</i></b> The application interface is temporarily disabled while uploading files.");
+}
+
+void Network::createItem(QString itemName)
+{
+    QByteArray sendDataBlock;
+    QDataStream sendDataStream(&sendDataBlock, QIODeviceBase::WriteOnly);
+    sendDataStream.setVersion(QDataStream::Qt_6_8);
+
+    sendDataStream << (int)RPC_CREATE_FILE;
+    sendDataStream << Util::getItemFullPath(itemName);
+
+    tcpSocket->write(sendDataBlock);
+
+    Logger::printLog(QString("A command to create \"%1\" has been sent to the server.").arg(itemName));
+}
+
+void Network::renameItem(QString itemPath, QString newItemName)
+{
+    QByteArray sendDataBlock;
+    QDataStream sendDataStream(&sendDataBlock, QIODeviceBase::WriteOnly);
+    sendDataStream.setVersion(QDataStream::Qt_6_8);
+
+    sendDataStream << (int)RPC_RENAME_FILE;
+    sendDataStream << itemPath;
+    sendDataStream << newItemName;
+
+    tcpSocket->write(sendDataBlock);
+
+    Logger::printLog(QString("A command to rename \"%1\" to \"%2\" has been sent to the server.").arg(Util::getItemNameFromPath(itemPath), newItemName));
 }
 
 void Network::deleteItem(QString itemPath, bool isFolder)
@@ -117,6 +146,8 @@ void Network::deleteItem(QString itemPath, bool isFolder)
     sendDataStream << isFolder;
 
     tcpSocket->write(sendDataBlock);
+
+    Logger::printLog(QString("A command to delete \"%1\" has been sent to the server.").arg(Util::getItemNameFromPath(itemPath)));
 }
 
 void Network::tcpSocketConnected()
