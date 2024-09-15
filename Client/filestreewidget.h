@@ -26,7 +26,7 @@ public:
 
     void addFileToTree(ServerFile file);
 
-    QString getSelectedFile();
+    QPair<QString, bool> getSelectedItem();
 
 private slots:
     void itemDoubleClicked(QTreeWidgetItem *item);

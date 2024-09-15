@@ -33,6 +33,10 @@ private slots:
 
     void on_downloadProgressBar_clicked();
 
+    void on_uploadButton_clicked();
+
+    void on_deleteButton_clicked();
+
     void updateFilesList(QVector<ServerFile> filesList, QString directoryPath);
 
     void openDirectoryRequest(QString directoryName);
@@ -41,14 +45,14 @@ private slots:
 
     void downloadFileProgress(int progress);
 
+    void uploadFinished();
+
 private:
     Ui::MainWindow *ui;
 
     FilesTreeWidget *filesTreeWidget;
 
     Network *network;
-
-    QString currentDirectoryPath;
 
     void enableInterfaceInteraction(bool state);
 };

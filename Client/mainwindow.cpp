@@ -3,6 +3,7 @@
 
 #include "config.h"
 #include "logger.h"
+#include "util.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -19,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(network, &Network::updateFilesList, this, &MainWindow::updateFilesList);
     connect(network, &Network::downloadFileProgress, this, &MainWindow::downloadFileProgress);
+    connect(network, &Network::uploadFinished, this, &MainWindow::uploadFinished);
     connect(filesTreeWidget, &FilesTreeWidget::openDirectoryRequest, this, &MainWindow::openDirectoryRequest);
     connect(filesTreeWidget, &FilesTreeWidget::openFileRequest, this, &MainWindow::openFileRequest);
 
@@ -79,12 +81,17 @@ void MainWindow::on_connectButton_clicked()
 
 void MainWindow::on_downloadProgressBar_clicked()
 {
-    QString fileName = filesTreeWidget->getSelectedFile();
-    if (fileName.isEmpty()) {
-        QMessageBox msgBox;
-        msgBox.setIcon(QMessageBox::Warning);
-        msgBox.setText("The file is not selected or you have selected a folder. Try again.");
-        msgBox.exec();
+    if (!Util::isConnectedToServer(network))
+        return;
+
+    QPair<QString, bool> item = filesTreeWidget->getSelectedItem();
+    if (item.first.isEmpty()) {
+        Util::sendWarningAlert("You have not selected the file you want to download.");
+        return;
+    }
+
+    if (item.second) {
+        Util::sendWarningAlert("Unable to download entire folder, select file.");
         return;
     }
 
@@ -92,12 +99,43 @@ void MainWindow::on_downloadProgressBar_clicked()
     if (saveDirectory.isEmpty())
         return;
 
-    network->downloadFile(currentDirectoryPath + "/" + fileName, false, saveDirectory);
+    network->downloadFile(Util::getItemFullPath(item.first), false, saveDirectory);
+}
+
+void MainWindow::on_uploadButton_clicked()
+{
+    if (!Util::isConnectedToServer(network))
+        return;
+
+    QString filePath = QFileDialog::getOpenFileName(this, "Select file to upload", "", "All Files (*)");
+    if (filePath.isEmpty())
+        return;
+
+    enableInterfaceInteraction(false);
+
+    network->uploadFile(filePath, Util::currentDirectoryPath);
+}
+
+void MainWindow::on_deleteButton_clicked()
+{
+    if (!Util::isConnectedToServer(network))
+        return;
+
+    QPair<QString, bool> item = filesTreeWidget->getSelectedItem();
+    if (item.first.isEmpty()) {
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setText("You have not selected a folder or file to delete.");
+        msgBox.exec();
+        return;
+    }
+
+    network->deleteItem(Util::getItemFullPath(item.first), item.second);
 }
 
 void MainWindow::updateFilesList(QVector<ServerFile> filesList, QString directoryPath)
 {
-    currentDirectoryPath = directoryPath;
+    Util::currentDirectoryPath = directoryPath;
 
     filesTreeWidget->clearTree();
 
@@ -140,6 +178,12 @@ void MainWindow::downloadFileProgress(int progress)
     ui->downloadProgressBar->setFormat("%p%");
 }
 
+void MainWindow::uploadFinished()
+{
+    enableInterfaceInteraction(true);
+    network->changeDirectory(Util::currentDirectoryPath);
+}
+
 void MainWindow::enableInterfaceInteraction(bool state)
 {
     ui->connectButton->setEnabled(state);
@@ -150,4 +194,3 @@ void MainWindow::enableInterfaceInteraction(bool state)
 
     ui->filesTreeWidget->setEnabled(state);
 }
-

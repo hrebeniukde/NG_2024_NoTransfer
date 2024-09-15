@@ -2,6 +2,7 @@
 
 #include "config.h"
 #include "logger.h"
+#include "util.h"
 #include "rpc.h"
 
 Network::Network(QObject *parent)
@@ -14,6 +15,7 @@ Network::Network(QObject *parent)
 
     currentDownloadingFile.clear();
     currentDownloadingFileSavePath.clear();
+    currentUploadingFile.clear();
 
     connect(tcpSocket, &QTcpSocket::connected, this, &Network::tcpSocketConnected);
     connect(tcpSocket, &QTcpSocket::disconnected, this, &Network::tcpSocketDisconnected);
@@ -37,6 +39,11 @@ bool Network::isAlreadyConnected(QHostAddress host, int port)
     return tcpSocket->peerAddress() == host && tcpSocket->peerPort() == port;
 }
 
+bool Network::isConnectedToServer()
+{
+    return tcpSocket->state() == QAbstractSocket::ConnectedState;
+}
+
 void Network::changeDirectory(QString newDirectoryPath)
 {
     QByteArray sendDataBlock;
@@ -49,11 +56,11 @@ void Network::changeDirectory(QString newDirectoryPath)
     tcpSocket->write(sendDataBlock);
 }
 
-void Network::downloadFile(QString filePath, bool tempFile, QString savePath)
+void Network::downloadFile(QString filePath, bool isTempFile, QString savePath)
 {
-    currentDownloadingFile = filePath.mid(filePath.lastIndexOf('/') + 1);
+    currentDownloadingFile = Util::getItemNameFromPath(filePath);
 
-    if (!tempFile && !savePath.isEmpty())
+    if (!isTempFile && !savePath.isEmpty())
         currentDownloadingFileSavePath = savePath;
 
     QByteArray sendDataBlock;
@@ -62,12 +69,49 @@ void Network::downloadFile(QString filePath, bool tempFile, QString savePath)
 
     sendDataStream << (int)RPC_DOWNLOAD_FILE;
     sendDataStream << filePath;
-    sendDataStream << tempFile;
+    sendDataStream << isTempFile;
 
     tcpSocket->write(sendDataBlock);
 
     Logger::printLog(QString("File \"%1\" download has started.").arg(currentDownloadingFile));
     Logger::printLog("<b><i>WARNING!</i></b> The application interface is temporarily disabled while downloading files.");
+}
+
+void Network::uploadFile(QString filePath, QString savePath)
+{
+    currentUploadingFile = Util::getItemNameFromPath(filePath);
+
+    QByteArray sendDataBlock;
+    QDataStream sendDataStream(&sendDataBlock, QIODeviceBase::WriteOnly);
+    sendDataStream.setVersion(QDataStream::Qt_6_8);
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly))
+        return;
+
+    sendDataStream << (int)RPC_UPLOAD_FILE;
+    sendDataStream << savePath + "/" + currentUploadingFile;
+    sendDataStream << file.readAll();
+
+    file.close();
+
+    tcpSocket->write(sendDataBlock);
+
+    Logger::printLog(QString("File \"%1\" upload has started.").arg(currentUploadingFile));
+    Logger::printLog("<b><i>WARNING!</i></b> The application interface is temporarily disabled while uploading files.");
+}
+
+void Network::deleteItem(QString itemPath, bool isFolder)
+{
+    QByteArray sendDataBlock;
+    QDataStream sendDataStream(&sendDataBlock, QIODeviceBase::WriteOnly);
+    sendDataStream.setVersion(QDataStream::Qt_6_8);
+
+    sendDataStream << (int)RPC_DELETE_FILE;
+    sendDataStream << itemPath;
+    sendDataStream << isFolder;
+
+    tcpSocket->write(sendDataBlock);
 }
 
 void Network::tcpSocketConnected()
@@ -120,11 +164,11 @@ void Network::handleIncomingRpc(int rpcId)
         break;
     }
     case RPC_SEND_FILE: {
-        bool tempFile;
+        bool isTempFile;
         qsizetype fileSize;
         QByteArray fileContent;
 
-        incomeDataStream >> tempFile;
+        incomeDataStream >> isTempFile;
         incomeDataStream >> fileSize;
 
         qint64 downloadedPartSize = tcpSocket->size() - tcpSocket->pos();
@@ -137,7 +181,7 @@ void Network::handleIncomingRpc(int rpcId)
             return;
 
         QString fileSavePath;
-        if (tempFile) {
+        if (isTempFile) {
             QString tempAppFolder = QString("%1/%2/").arg(QDir::tempPath(), APP_NAME);
             fileSavePath = tempAppFolder + currentDownloadingFile;
             QDir().mkpath(tempAppFolder);
@@ -155,8 +199,18 @@ void Network::handleIncomingRpc(int rpcId)
 
         Logger::printLog(QString("File \"%1\" download has finished. File has downloaded to \"%2\".").arg(currentDownloadingFile, fileSavePath));
 
-        if (tempFile)
+        if (isTempFile)
             QDesktopServices::openUrl(QUrl::fromLocalFile(fileSavePath));
+        break;
+    }
+    case RPC_UPLOAD_FILE_FINISHED: {
+        if (!incomeDataStream.commitTransaction())
+            return;
+
+        Logger::printLog(QString("File \"%1\" upload has finished.").arg(currentUploadingFile));
+
+        emit uploadFinished();
+        break;
     }
     default:
         break;

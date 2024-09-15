@@ -19,9 +19,15 @@ public:
 
     bool isAlreadyConnected(QHostAddress host, int port);
 
+    bool isConnectedToServer();
+
     void changeDirectory(QString directoryName);
 
-    void downloadFile(QString filePath, bool tempFile = true, QString savePath = "");
+    void downloadFile(QString filePath, bool isTempFile = true, QString savePath = "");
+
+    void uploadFile(QString filePath, QString savePath);
+
+    void deleteItem(QString itemPath, bool isFolder);
 
 private slots:
     void tcpSocketConnected();
@@ -35,6 +41,8 @@ signals:
 
     void downloadFileProgress(int progress);
 
+    void uploadFinished();
+
 private:
     QTcpSocket *tcpSocket;
 
@@ -42,6 +50,8 @@ private:
 
     QString currentDownloadingFile;
     QString currentDownloadingFileSavePath;
+
+    QString currentUploadingFile;
 
     void handleIncomingRpc(int rpcId);
 };

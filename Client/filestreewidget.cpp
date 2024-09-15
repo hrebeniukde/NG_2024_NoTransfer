@@ -55,17 +55,23 @@ void FilesTreeWidget::itemDoubleClicked(QTreeWidgetItem *item)
     }
 }
 
-QString FilesTreeWidget::getSelectedFile()
+QPair<QString, bool> FilesTreeWidget::getSelectedItem()
 {
+    QPair<QString, bool> result;
+    result.first.clear();
+    result.second = false;
+
     QList<QTreeWidgetItem *> itemList;
     itemList = treeWidget->selectedItems();
-
     if (itemList.isEmpty())
-        return "";
+        return result;
 
+    QString itemName = itemList.at(0)->text(0);
     QString itemType = itemList.at(0)->text(2);
-    if (itemType == "Folder" || itemType == "")
-        return "";
+    if (itemType.isEmpty())
+        return result;
 
-    return itemList.at(0)->text(0);
+    result.first = itemName;
+    result.second = itemType == "Folder";
+    return result;
 }
