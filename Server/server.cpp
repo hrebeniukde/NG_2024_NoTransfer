@@ -121,8 +121,7 @@ void Server::handleIncomingRpc(ClientData client, int rpcId)
         if (!client.incomeDataStream->commitTransaction())
             return;
 
-        DEBUG << "New download request from " << getClientFormattedAddress(client.tcpSocket);
-        DEBUG << "Requested file: \"" << filePath << "\"";
+        DEBUG << "\"" << filePath << "\" was requested to download by " << getClientFormattedAddress(client.tcpSocket);
 
         sendFile(client, filePath, isTempFile);
         break;
@@ -142,7 +141,56 @@ void Server::handleIncomingRpc(ClientData client, int rpcId)
         file.write(fileContent);
         file.close();
 
+        DEBUG << "\"" << filePath << "\" was uploaded by " << getClientFormattedAddress(client.tcpSocket);
+
         sendUploadFinished(client);
+        break;
+    }
+    case RPC_CREATE_FILE: {
+        QString itemPath;
+
+        *client.incomeDataStream >> itemPath;
+
+        if (!client.incomeDataStream->commitTransaction())
+            return;
+
+        QFileInfo fileInfo(itemPath);
+        if (fileInfo.suffix() == "") {
+            QDir().mkpath(itemPath);
+        } else {
+            QFile file(itemPath);
+            file.open(QIODevice::WriteOnly);
+            file.close();
+        }
+
+        DEBUG << "\"" << itemPath << "\" was created by " << getClientFormattedAddress(client.tcpSocket);
+
+        sendFilesList(client, Util::getItemParentDirectory(itemPath));
+        break;
+    }
+    case RPC_RENAME_FILE: {
+        QString itemPath;
+        QString newItemName;
+
+        *client.incomeDataStream >> itemPath;
+        *client.incomeDataStream >> newItemName;
+
+        if (!client.incomeDataStream->commitTransaction())
+            return;
+
+        QString newItemPath = Util::getItemParentDirectory(itemPath) + '/' + newItemName;
+
+        QFileInfo fileInfo(itemPath);
+        if (fileInfo.suffix() == "") {
+            QDir().rename(itemPath, newItemPath);
+        } else {
+            QFile file(itemPath);
+            file.rename(newItemPath);
+        }
+
+        DEBUG << "\"" << itemPath << "\" was renamed to \"" << newItemPath << "\" by " << getClientFormattedAddress(client.tcpSocket);
+
+        sendFilesList(client, Util::getItemParentDirectory(itemPath));
         break;
     }
     case RPC_DELETE_FILE: {
@@ -168,6 +216,8 @@ void Server::handleIncomingRpc(ClientData client, int rpcId)
 
             file.remove();
         }
+
+        DEBUG << "\"" << itemPath << "\" was deleted by " << getClientFormattedAddress(client.tcpSocket);
 
         sendFilesList(client, Util::getItemParentDirectory(itemPath));
         break;
@@ -223,7 +273,7 @@ void Server::sendFile(ClientData client, QString filePath, bool isTempFile)
 
     client.tcpSocket->write(sendDataBlock);
 
-    DEBUG << "File \"" << filePath << "\" has been sent to " << getClientFormattedAddress(client.tcpSocket);
+    DEBUG << "\"" << filePath << "\" has been sent to " << getClientFormattedAddress(client.tcpSocket);
 }
 
 void Server::sendUploadFinished(ClientData client)
