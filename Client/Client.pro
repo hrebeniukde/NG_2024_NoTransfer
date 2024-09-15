@@ -14,7 +14,8 @@ SOURCES += \
     logger.cpp \
     main.cpp \
     mainwindow.cpp \
-    network.cpp
+    network.cpp \
+    util.cpp
 
 HEADERS += \
     clickableprogressbar.h \
@@ -23,7 +24,8 @@ HEADERS += \
     logger.h \
     mainwindow.h \
     network.h \
-    rpc.h
+    rpc.h \
+    util.h
 
 FORMS += \
     mainwindow.ui

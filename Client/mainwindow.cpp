@@ -111,9 +111,9 @@ void MainWindow::openDirectoryRequest(QString directoryName)
     QString newDirectoryPath;
 
     if (directoryName == "..") {
-        newDirectoryPath = currentDirectoryPath.left(currentDirectoryPath.lastIndexOf('/'));
+        newDirectoryPath = Util::getItemParentDirectory(Util::currentDirectoryPath);
     } else {
-        newDirectoryPath = currentDirectoryPath + "/" + directoryName;
+        newDirectoryPath = Util::getItemFullPath(directoryName);
     }
 
     network->changeDirectory(newDirectoryPath);
@@ -121,7 +121,7 @@ void MainWindow::openDirectoryRequest(QString directoryName)
 
 void MainWindow::openFileRequest(QString fileName)
 {
-    network->downloadFile(currentDirectoryPath + "/" + fileName);
+    network->downloadFile(Util::getItemFullPath(fileName));
 }
 
 void MainWindow::downloadFileProgress(int progress)
