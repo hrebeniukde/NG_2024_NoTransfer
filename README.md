@@ -1,10 +1,10 @@
 # NoTransfer
-**NoTransfer** is a project that allows sharing access to local folders using a standalone server and client, both written in [Qt](https://www.qt.io/). It is designed for **New Generation**.
+**NoTransfer** is a project that allows sharing access to local folders using a standalone server and client, both written in [Qt](https://www.qt.io/). It is designed for the **New Generation** course.
 
-# Screenshots
+## Screenshots
 ![Application UI](screenshot.png)
 
-# How to Build and Run
+## How to Build and Run
 1. Open a terminal and clone the repository:
 ```bash
 git clone https://github.com/hrebeniukde/NG_2024_NoTransfer.git
