@@ -61,8 +61,6 @@ QPushButton::hover {
 #portSpinBox {
     background-color: #333333;
     color: white;
-    padding-top: 7px;
-    padding-bottom: 7px;
     border: none;
     border-radius: 7px;
 }

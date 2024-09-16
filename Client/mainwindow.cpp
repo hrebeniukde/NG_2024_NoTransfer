@@ -48,8 +48,8 @@ void MainWindow::on_aboutButton_clicked()
             "<center><strong>%1 (%2)</strong></center><br/>"
             "Client application for working with server files with the ability to download, upload, create, rename and delete them.<br/><br/>"
             "<strong>Social Media:</strong><br/>"
-            "- <a href=\"%3\">GitHub</a><br/><br/>"
-            "Copyright © 2024 <a href=\"%4\">%5</a>"
+            "- <a href=\"%3\" style=\"color: white;\">GitHub</a><br/><br/>"
+            "Copyright © 2024 <a href=\"%4\" style=\"color: white;\">%5</a>"
             ).arg(APP_NAME, APP_VERSION, GITHUB_REPO_URL, AUTHOR_GITHUB_URL, AUTHOR_NAME)
         );
     msgBox.exec();
